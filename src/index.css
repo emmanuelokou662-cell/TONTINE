@@ -1,0 +1,179 @@
+/* Import des polices Sora et Inter avec support complet des glyphes français Latin Extended */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Thème clair moderne (Section 11.3 du Cahier des Charges) */
+  --bg: #F4F7FB;
+  --surface: #FFFFFF;
+  --surface-2: #EAEFF6;
+  --primary: #1F4E79;
+  --primary-light: #2E86C1;
+  --accent: #E8833A;
+  --success: #2E9E5B;
+  --warning: #E0A800;
+  --danger: #C0392B;
+  --text: #0F172A;
+  --text-dim: #64748B;
+  --border: #E2E8F0;
+  --card-glass: rgba(255, 255, 255, 0.85);
+  --header-glass: rgba(255, 255, 255, 0.9);
+}
+
+.dark {
+  /* Thème sombre ultra élégant (Section 11.3 du Cahier des Charges) */
+  --bg: #0B0F17;
+  --surface: #141B26;
+  --surface-2: #1D2635;
+  --primary: #2563EB;
+  --primary-light: #38BDF8;
+  --accent: #F97316;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --text: #F1F5F9;
+  --text-dim: #94A3B8;
+  --border: #232E40;
+  --card-glass: rgba(20, 27, 38, 0.8);
+  --header-glass: rgba(11, 15, 23, 0.85);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Carte de groupe avec dégradé bleu nuit signature (Section 11.4) */
+  .card-gradient-primary {
+    background: linear-gradient(135deg, #163859 0%, #0d2238 100%);
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-gradient-primary::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(232, 131, 58, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Bouton d'action principal CTA orange (Section 11.4) */
+  .btn-cta {
+    background: linear-gradient(135deg, #F2994A 0%, var(--accent) 100%);
+    color: #FFFFFF;
+    border-radius: 16px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 6px 20px -2px rgba(232, 131, 58, 0.45);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+  }
+
+  .btn-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -2px rgba(232, 131, 58, 0.55);
+    filter: brightness(1.04);
+  }
+
+  .btn-cta:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .btn-secondary {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 16px;
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--surface-2);
+    transform: translateY(-1px);
+    border-color: var(--primary-light);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  /* Zone tactile minimale garantie (44x44px) pour l'accessibilité PWA */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Glassmorphism containers */
+  .glass-panel {
+    background: var(--card-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+  }
+
+  .glass-header {
+    background: var(--header-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Cache scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
