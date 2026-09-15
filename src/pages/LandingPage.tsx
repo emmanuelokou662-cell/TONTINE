@@ -50,12 +50,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* En-tête avec Logo, Thème Switcher et Bouton Connexion */}
         <header className="flex items-center justify-between py-1">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary to-primary-light flex items-center justify-center text-white font-display font-extrabold text-xl shadow-md shadow-primary/20">
-              T
-            </div>
+            <img
+              src="/logo.png"
+              alt="Logo Tontine+"
+              className="w-11 h-11 rounded-2xl object-contain bg-white shadow-md shadow-primary/20 p-1 border border-custom"
+            />
             <div>
               <h1 className="font-display font-extrabold text-xl leading-tight tracking-tight text-primary dark:text-primary-light">
-                Tontine
+                Tontine<span className="text-accent">+</span>
               </h1>
               <p className="text-[10px] text-text-dim uppercase tracking-wider font-bold">PWA Côte d&apos;Ivoire</p>
             </div>

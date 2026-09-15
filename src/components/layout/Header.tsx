@@ -128,9 +128,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenSettings, onOpenCreateOrJo
 
         {/* Logo de la PWA à droite (RF-23) */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-primary-light flex items-center justify-center text-white font-display font-extrabold text-sm shadow-md shadow-primary/20">
-            T
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo Tontine+"
+            className="w-8 h-8 rounded-xl object-contain bg-white shadow-sm p-0.5 border border-custom"
+          />
         </div>
       </div>
     </header>

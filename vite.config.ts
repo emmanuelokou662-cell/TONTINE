@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.png'],
+      includeAssets: ['favicon.svg', 'logo.png', 'icons/*.png'],
       manifest: {
-        name: 'Tontine — Épargne Collective Digitale',
-        short_name: 'Tontine PWA',
+        name: 'Tontine+ — Épargne Collective Digitale',
+        short_name: 'Tontine+',
         description: 'Plateforme moderne et sécurisée de gestion de tontine en Côte d\'Ivoire',
         theme_color: '#1F4E79',
         background_color: '#10151C',
