@@ -3,7 +3,17 @@
 
 export type RoleMembre = 'admin_principal' | 'admin_secondaire' | 'membre';
 export type StatutMembre = 'actif' | 'suspecte' | 'retire';
-export type PeriodiciteCycle = '1semaine' | '2semaines' | '1mois' | '2mois';
+export type PeriodiciteCycle =
+  | '1jour'
+  | '2jours'
+  | '3jours'
+  | '4jours'
+  | '5jours'
+  | '1semaine'
+  | '2semaines'
+  | '1mois'
+  | '2mois'
+  | '1an';
 export type StatutCycle = 'en_cours' | 'termine';
 export type StatutTour = 'en_attente' | 'distribue' | 'saute';
 export type TypeTransaction = 'depot' | 'retrait';

@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useGroup } from '../context/GroupContext';
 import { TourOrderList } from '../components/members/TourOrderList';
-import { MembreGroupe } from '../types';
+import { MembreGroupe, PeriodiciteCycle } from '../types';
 import { apiFetch } from '../services/apiClient';
-import { ArrowLeft, Shield, DollarSign, Key } from 'lucide-react';
+import { ArrowLeft, Shield, DollarSign, Key, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface ManageGroupPageProps {
   onBack: () => void;
 }
+
+const PERIODICITE_LABELS: Record<PeriodiciteCycle, string> = {
+  '1jour': '1 jour',
+  '2jours': '2 jours',
+  '3jours': '3 jours',
+  '4jours': '4 jours',
+  '5jours': '5 jours (Max)',
+  '1semaine': '1 semaine (7 jours)',
+  '2semaines': '2 semaines (14 jours)',
+  '1mois': '1 mois (30 jours)',
+  '2mois': '2 mois (60 jours)',
+  '1an': '1 an (Annuel)'
+};
 
 /**
  * Page d'Administration et Paramétrage du Groupe de Tontine (RF-09, RF-21, RF-25)
@@ -16,16 +29,19 @@ export const ManageGroupPage: React.FC<ManageGroupPageProps> = ({ onBack }) => {
   const { activeGroup, refreshGroups } = useGroup();
   const [members, setMembers] = useState<MembreGroupe[]>([]);
   const [newAmount, setNewAmount] = useState<number>(0);
-  const [isUpdatingAmount, setIsUpdatingAmount] = useState<boolean>(false);
-  const [amountSuccess, setAmountSuccess] = useState<boolean>(false);
+  const [selectedPeriodicite, setSelectedPeriodicite] = useState<PeriodiciteCycle>('1mois');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'order' | 'settings'>('order');
 
   useEffect(() => {
     if (activeGroup) {
       setNewAmount(activeGroup.cycle_en_cours?.montant_cotisation || 0);
+      setSelectedPeriodicite(activeGroup.periodicite || '1mois');
       loadMembers();
     }
-  }, [activeGroup?.id_groupe]);
+  }, [activeGroup?.id_groupe, activeGroup?.periodicite, activeGroup?.cycle_en_cours?.montant_cotisation]);
 
   const loadMembers = async () => {
     if (!activeGroup) return;
@@ -39,27 +55,43 @@ export const ManageGroupPage: React.FC<ManageGroupPageProps> = ({ onBack }) => {
     }
   };
 
-  const handleUpdateAmount = async (e: React.FormEvent) => {
+  const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeGroup?.cycle_en_cours || newAmount <= 0) return;
+    if (!activeGroup || newAmount <= 0) return;
 
-    setIsUpdatingAmount(true);
-    setAmountSuccess(false);
+    setIsSaving(true);
+    setSaveSuccess(false);
+    setSaveError(null);
 
     try {
-      const res = await apiFetch(`/transactions/cycle/${activeGroup.cycle_en_cours.id_cycle}/complete`, {
-        method: 'POST',
-        body: JSON.stringify({ nouveau_montant: newAmount })
+      // 1. Mise à jour de la configuration globale du groupe (périodicité et montant)
+      const resGroup = await apiFetch(`/groups/${activeGroup.id_groupe}/settings`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          periodicite: selectedPeriodicite,
+          montant_cotisation: newAmount
+        })
       });
 
-      setIsUpdatingAmount(false);
-      if (res.success) {
-        setAmountSuccess(true);
-        await refreshGroups();
-        setTimeout(() => setAmountSuccess(false), 3000);
+      // 2. Si un cycle est en cours, actualiser également les paramètres du cycle
+      if (activeGroup.cycle_en_cours) {
+        await apiFetch(`/transactions/cycle/${activeGroup.cycle_en_cours.id_cycle}/complete`, {
+          method: 'POST',
+          body: JSON.stringify({ nouveau_montant: newAmount, periodicite: selectedPeriodicite })
+        });
       }
-    } catch (e) {
-      setIsUpdatingAmount(false);
+
+      setIsSaving(false);
+      if (resGroup.success || !resGroup.error) {
+        setSaveSuccess(true);
+        await refreshGroups();
+        setTimeout(() => setSaveSuccess(false), 3500);
+      } else {
+        setSaveError(resGroup.error?.message || 'Erreur lors de la mise à jour des paramètres.');
+      }
+    } catch (e: any) {
+      setIsSaving(false);
+      setSaveError(e?.message || 'Erreur de connexion lors de la sauvegarde.');
     }
   };
 
@@ -126,40 +158,95 @@ export const ManageGroupPage: React.FC<ManageGroupPageProps> = ({ onBack }) => {
         </div>
       )}
 
-      {/* Onglet 2 : Paramètres et Montant de cotisation */}
+      {/* Onglet 2 : Paramètres, Délais de retrait et Montant de cotisation */}
       {activeTab === 'settings' && (
         <div className="space-y-4">
-          {/* Formulaire de fixation du montant */}
-          <form onSubmit={handleUpdateAmount} className="bg-surface border border-custom rounded-3xl p-5 shadow-sm space-y-3">
-            <h3 className="font-display font-bold text-sm text-text-main flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-accent" />
-              <span>Montant de la cotisation</span>
-            </h3>
-            <p className="text-xs text-text-dim">
-              Le montant de cotisation est identique pour tous les membres et applicable pour le cycle.
-            </p>
-
+          <form onSubmit={handleUpdateSettings} className="bg-surface border border-custom rounded-3xl p-5 shadow-sm space-y-4">
+            
+            {/* 1. Délais de retrait / Périodicité du cycle */}
             <div>
-              <label className="block text-xs font-semibold text-text-dim mb-1">Montant par membre (FCFA)</label>
-              <input
-                type="number"
-                min={500}
-                value={newAmount}
-                onChange={(e) => setNewAmount(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-base font-bold text-text-main focus:border-accent focus:outline-none"
-              />
+              <h3 className="font-display font-bold text-sm text-text-main flex items-center gap-2 mb-1">
+                <Clock className="w-4 h-4 text-accent" />
+                <span>Délai de retrait (Fin de cycle & Tours)</span>
+              </h3>
+              <p className="text-xs text-text-dim mb-3">
+                Sélectionnez l&apos;intervalle entre chaque tour de redistribution de la cagnotte.
+              </p>
+
+              <div className="space-y-2.5">
+                <label className="block text-xs font-semibold text-text-dim">Périodicité des tours</label>
+                <select
+                  value={selectedPeriodicite}
+                  onChange={(e) => setSelectedPeriodicite(e.target.value as PeriodiciteCycle)}
+                  className="w-full px-3.5 py-3 rounded-xl bg-surface-2 border border-custom text-sm font-semibold text-text-main focus:border-accent focus:outline-none"
+                >
+                  <optgroup label="Jours (1 à 5 jours max)">
+                    <option value="1jour">1 jour</option>
+                    <option value="2jours">2 jours</option>
+                    <option value="3jours">3 jours</option>
+                    <option value="4jours">4 jours</option>
+                    <option value="5jours">5 jours (Max)</option>
+                  </optgroup>
+                  <optgroup label="Semaines">
+                    <option value="1semaine">1 semaine (7 jours)</option>
+                    <option value="2semaines">2 semaines (14 jours)</option>
+                  </optgroup>
+                  <optgroup label="Mois">
+                    <option value="1mois">1 mois (30 jours)</option>
+                    <option value="2mois">2 mois (60 jours)</option>
+                  </optgroup>
+                  <optgroup label="Année">
+                    <option value="1an">1 an (Annuel)</option>
+                  </optgroup>
+                </select>
+              </div>
             </div>
 
-            {amountSuccess && (
-              <p className="text-xs font-semibold text-success">Montant mis à jour avec succès !</p>
+            <hr className="border-custom my-2" />
+
+            {/* 2. Montant de la cotisation */}
+            <div>
+              <h3 className="font-display font-bold text-sm text-text-main flex items-center gap-2 mb-1">
+                <DollarSign className="w-4 h-4 text-accent" />
+                <span>Montant de la cotisation</span>
+              </h3>
+              <p className="text-xs text-text-dim mb-2.5">
+                Le montant de cotisation est identique pour tous les membres et applicable pour le cycle.
+              </p>
+
+              <div>
+                <label className="block text-xs font-semibold text-text-dim mb-1">Montant par membre (FCFA)</label>
+                <input
+                  type="number"
+                  min={500}
+                  step={500}
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-base font-bold text-text-main focus:border-accent focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {saveSuccess && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                <span>Paramètres et délai de retrait mis à jour avec succès !</span>
+              </div>
+            )}
+
+            {saveError && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{saveError}</span>
+              </div>
             )}
 
             <button
               type="submit"
-              disabled={isUpdatingAmount}
-              className="btn-cta w-full text-xs"
+              disabled={isSaving}
+              className="btn-cta w-full text-xs font-bold"
             >
-              {isUpdatingAmount ? 'Enregistrement...' : 'Enregistrer le nouveau montant'}
+              {isSaving ? 'Enregistrement en cours...' : 'Enregistrer les paramètres du cycle'}
             </button>
           </form>
 
@@ -169,9 +256,13 @@ export const ManageGroupPage: React.FC<ManageGroupPageProps> = ({ onBack }) => {
               <Key className="w-4 h-4 text-accent" />
               <span>Informations d&apos;accès</span>
             </h3>
-            <div className="p-3 rounded-2xl bg-surface-2 border border-custom space-y-1">
-              <p className="text-text-dim">Périodicité des tours : <span className="font-bold text-text-main">{activeGroup.periodicite}</span></p>
-              <p className="text-text-dim">Nombre de membres : <span className="font-bold text-text-main">{members.length}/10</span></p>
+            <div className="p-3 rounded-2xl bg-surface-2 border border-custom space-y-1.5">
+              <p className="text-text-dim">
+                Périodicité active : <span className="font-bold text-text-main">{PERIODICITE_LABELS[activeGroup.periodicite] || activeGroup.periodicite}</span>
+              </p>
+              <p className="text-text-dim">
+                Nombre de membres : <span className="font-bold text-text-main">{members.length}/10</span>
+              </p>
             </div>
           </div>
         </div>

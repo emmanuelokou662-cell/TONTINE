@@ -246,10 +246,24 @@ export const CreateOrJoinGroupModal: React.FC<CreateOrJoinGroupModalProps> = ({
                   onChange={(e) => setPeriodicite(e.target.value as PeriodiciteCycle)}
                   className="w-full px-2.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-xs text-text-main focus:border-accent focus:outline-none"
                 >
-                  <option value="1semaine">1 semaine</option>
-                  <option value="2semaines">2 semaines</option>
-                  <option value="1mois">1 mois</option>
-                  <option value="2mois">2 mois</option>
+                  <optgroup label="Jours (1 à 5 jours)">
+                    <option value="1jour">1 jour</option>
+                    <option value="2jours">2 jours</option>
+                    <option value="3jours">3 jours</option>
+                    <option value="4jours">4 jours</option>
+                    <option value="5jours">5 jours</option>
+                  </optgroup>
+                  <optgroup label="Semaines">
+                    <option value="1semaine">1 semaine (7j)</option>
+                    <option value="2semaines">2 semaines (14j)</option>
+                  </optgroup>
+                  <optgroup label="Mois">
+                    <option value="1mois">1 mois (30j)</option>
+                    <option value="2mois">2 mois (60j)</option>
+                  </optgroup>
+                  <optgroup label="Année">
+                    <option value="1an">1 an (Annuel)</option>
+                  </optgroup>
                 </select>
               </div>
 
