@@ -1,6 +1,7 @@
 import React from 'react';
 import { Tour } from '../../types';
-import { Calendar, User, Phone, CheckCircle } from 'lucide-react';
+import { Calendar, Phone, CheckCircle } from 'lucide-react';
+import { formatMediaUrl } from '../../services/apiClient';
 
 interface UpcomingTourBannerProps {
   tour: Tour | null;
@@ -54,10 +55,23 @@ export const UpcomingTourBanner: React.FC<UpcomingTourBannerProps> = ({
         {/* Photo du bénéficiaire */}
         <div className="w-12 h-12 rounded-2xl bg-surface-2 border border-custom overflow-hidden flex-shrink-0 flex items-center justify-center">
           {benef?.photo_profil_url ? (
-            <img src={benef.photo_profil_url} alt="Bénéficiaire" className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-6 h-6 text-text-dim" />
-          )}
+            <img
+              src={formatMediaUrl(benef.photo_profil_url)}
+              alt="Bénéficiaire"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const fb = (e.target as HTMLImageElement).nextElementSibling;
+                if (fb) (fb as HTMLElement).style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div
+            style={{ display: benef?.photo_profil_url ? 'none' : 'flex' }}
+            className="w-full h-full items-center justify-center bg-primary/10 text-primary font-bold text-sm"
+          >
+            {benef?.prenom?.[0] || 'B'}
+          </div>
         </div>
 
         {/* Détails du bénéficiaire */}

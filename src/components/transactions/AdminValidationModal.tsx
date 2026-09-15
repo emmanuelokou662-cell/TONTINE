@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction } from '../../types';
 import { X, Check, AlertTriangle, ShieldCheck, XCircle } from 'lucide-react';
-import { apiFetch } from '../../services/apiClient';
+import { apiFetch, formatMediaUrl } from '../../services/apiClient';
 
 interface AdminValidationModalProps {
   transaction: Transaction | null;
@@ -18,13 +18,11 @@ export const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
   onSuccess
 }) => {
   const [motifRejet, setMotifRejet] = useState<string>('');
-  const [showRejectForm, setShowRejectForm] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showRejectForm, setShowRejectForm] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!transaction) return null;
-
-  const member = transaction.membre_groupe?.utilisateur;
 
   const handleValidate = async () => {
     setIsLoading(true);
@@ -41,16 +39,16 @@ export const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
       } else {
         setError(res.error?.message || 'Erreur lors de la validation.');
       }
-    } catch (e) {
+    } catch (e: any) {
       setIsLoading(false);
-      setError('Erreur réseau.');
+      setError('Erreur de connexion.');
     }
   };
 
   const handleReject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!motifRejet.trim() || motifRejet.trim().length < 5) {
-      setError('Le motif de rejet est obligatoire (au moins 5 caractères).');
+    if (!motifRejet.trim()) {
+      setError('Le motif de rejet est obligatoire.');
       return;
     }
 
@@ -71,24 +69,25 @@ export const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
       } else {
         setError(res.error?.message || 'Erreur lors du rejet.');
       }
-    } catch (e) {
+    } catch (e: any) {
       setIsLoading(false);
-      setError('Erreur réseau.');
+      setError('Erreur de connexion.');
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 select-none animate-in fade-in">
-      <div className="bg-surface border border-custom rounded-t-3xl sm:rounded-3xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-bold text-lg text-text-main flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-primary dark:text-primary-light" />
-            <span>Vérification de cotisation</span>
-          </h2>
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-in fade-in">
+      <div className="bg-surface border border-custom rounded-3xl max-w-sm w-full p-5 shadow-2xl">
+        <div className="flex items-center justify-between pb-3 border-b border-custom mb-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-accent" />
+            <h3 className="font-display font-bold text-sm text-text-main">
+              Arbitrage de Cotisation
+            </h3>
+          </div>
           <button
             onClick={onClose}
-            className="touch-target p-1.5 rounded-full hover:bg-surface-2 text-text-dim"
-            aria-label="Fermer"
+            className="p-1 text-text-dim hover:text-text-main rounded-full hover:bg-surface-2"
           >
             <X className="w-5 h-5" />
           </button>
@@ -100,27 +99,23 @@ export const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
           </div>
         )}
 
-        {/* Détails du membre et de la déclaration */}
-        <div className="p-4 rounded-2xl bg-surface-2 border border-custom space-y-2 mb-4 text-xs">
+        {/* Détails de la transaction */}
+        <div className="bg-surface-2 p-3.5 rounded-2xl border border-custom space-y-2 text-xs mb-4">
           <div className="flex justify-between">
             <span className="text-text-dim font-medium">Membre :</span>
-            <span className="font-bold text-text-main font-display">
-              {member?.prenom} {member?.nom}
+            <span className="font-bold text-text-main">
+              {transaction.membre_groupe?.utilisateur.prenom} {transaction.membre_groupe?.utilisateur.nom}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-dim font-medium">Numéro Mobile Money :</span>
-            <span className="font-mono font-bold text-text-main">{member?.contact_paiement}</span>
-          </div>
-          <div className="flex justify-between">
             <span className="text-text-dim font-medium">Montant déclaré :</span>
-            <span className="font-bold text-accent text-sm">
+            <span className="font-display font-extrabold text-accent text-sm">
               {transaction.montant.toLocaleString('fr-FR')} FCFA
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-dim font-medium">Opérateur :</span>
-            <span className="font-bold text-text-main">{transaction.moyen_paiement}</span>
+            <span className="text-text-dim font-medium">Moyen :</span>
+            <span className="font-semibold text-text-main">{transaction.moyen_paiement}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-dim font-medium">N° Transaction :</span>
@@ -138,7 +133,7 @@ export const AdminValidationModal: React.FC<AdminValidationModalProps> = ({
             </label>
             <div className="rounded-2xl border border-custom overflow-hidden bg-black/10 max-h-56 flex items-center justify-center p-1">
               <img
-                src={transaction.preuve_capture_url}
+                src={formatMediaUrl(transaction.preuve_capture_url)}
                 alt="Capture reçu"
                 className="max-h-52 w-full object-contain rounded-xl"
               />

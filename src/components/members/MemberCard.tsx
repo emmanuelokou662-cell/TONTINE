@@ -1,7 +1,8 @@
 import React from 'react';
 import { MembreGroupe } from '../../types';
 import { Badge } from '../common/Badge';
-import { User, Phone, ShieldCheck, BellRing, MoreVertical } from 'lucide-react';
+import { Phone, ShieldCheck, BellRing, MoreVertical } from 'lucide-react';
+import { formatMediaUrl } from '../../services/apiClient';
 
 interface MemberCardProps {
   member: MembreGroupe;
@@ -30,10 +31,23 @@ export const MemberCard: React.FC<MemberCardProps> = ({
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative w-11 h-11 rounded-full bg-surface-2 border border-custom flex-shrink-0 overflow-hidden flex items-center justify-center">
             {member.photo_profil_url ? (
-              <img src={member.photo_profil_url} alt={member.prenom} className="w-full h-full object-cover" />
-            ) : (
-              <User className="w-5 h-5 text-text-dim" />
-            )}
+              <img
+                src={formatMediaUrl(member.photo_profil_url)}
+                alt={member.prenom}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fb = (e.target as HTMLImageElement).nextElementSibling;
+                  if (fb) (fb as HTMLElement).style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div
+              style={{ display: member.photo_profil_url ? 'none' : 'flex' }}
+              className="w-full h-full items-center justify-center bg-primary/10 text-primary font-bold text-xs"
+            >
+              {member.prenom?.[0] || 'M'}
+            </div>
             {member.role !== 'membre' && (
               <div className="absolute -bottom-0.5 -right-0.5 bg-primary text-white p-0.5 rounded-full shadow-sm">
                 <ShieldCheck className="w-3 h-3" />

@@ -3,7 +3,7 @@ import { Transaction } from '../types';
 import { useGroup } from '../context/GroupContext';
 import { TransactionItem } from '../components/transactions/TransactionItem';
 import { AdminValidationModal } from '../components/transactions/AdminValidationModal';
-import { apiFetch } from '../services/apiClient';
+import { apiFetch, formatMediaUrl } from '../services/apiClient';
 import { db, cacheTransactions } from '../db/indexedDB';
 import { useSocket } from '../context/SocketContext';
 import { Filter, Receipt, X } from 'lucide-react';
@@ -179,14 +179,37 @@ export const TransactionsPage: React.FC<TransactionsPageProps> = ({ onOpenDeclar
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={() => setSelectedProofUrl(null)}
         >
-          <div className="relative max-w-sm w-full bg-surface rounded-3xl overflow-hidden p-2">
-            <button
-              onClick={() => setSelectedProofUrl(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white z-10"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <img src={selectedProofUrl} alt="Reçu" className="w-full max-h-[75vh] object-contain rounded-2xl" />
+          <div
+            className="relative max-w-sm w-full bg-surface rounded-3xl overflow-hidden p-3 border border-custom shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-custom">
+              <span className="font-display font-bold text-xs text-text-main">Capture du reçu de paiement</span>
+              <button
+                onClick={() => setSelectedProofUrl(null)}
+                className="p-1.5 rounded-full hover:bg-surface-2 text-text-dim hover:text-text-main transition-colors"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="bg-surface-2 rounded-2xl overflow-hidden flex items-center justify-center min-h-[220px]">
+              <img
+                src={formatMediaUrl(selectedProofUrl)}
+                alt="Capture du Reçu Mobile Money"
+                className="w-full max-h-[70vh] object-contain rounded-xl"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fallback = (e.target as HTMLImageElement).nextElementSibling;
+                  if (fallback) (fallback as HTMLElement).style.display = 'flex';
+                }}
+              />
+              <div style={{ display: 'none' }} className="flex flex-col items-center justify-center p-6 text-center text-text-dim text-xs">
+                <Receipt className="w-10 h-10 mb-2 text-accent opacity-60" />
+                <p className="font-semibold text-text-main">Reçu temporairement indisponible</p>
+                <p className="text-[11px] text-text-dim mt-1">Le fichier justificatif n&apos;a pas pu être chargé.</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

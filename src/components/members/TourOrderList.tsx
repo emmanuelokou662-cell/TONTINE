@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MembreGroupe } from '../../types';
-import { ArrowUp, ArrowDown, Check, User } from 'lucide-react';
-import { apiFetch } from '../../services/apiClient';
+import { ArrowUp, ArrowDown, Check } from 'lucide-react';
+import { apiFetch, formatMediaUrl } from '../../services/apiClient';
 
 interface TourOrderListProps {
   cycleId: string;
@@ -85,12 +85,25 @@ export const TourOrderList: React.FC<TourOrderListProps> = ({ cycleId, members, 
               </div>
 
               {/* Photo & Nom */}
-              <div className="w-8 h-8 rounded-full bg-surface-2 overflow-hidden flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-surface-2 overflow-hidden flex items-center justify-center flex-shrink-0">
                 {member.photo_profil_url ? (
-                  <img src={member.photo_profil_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4 text-text-dim" />
-                )}
+                  <img
+                    src={formatMediaUrl(member.photo_profil_url)}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const fb = (e.target as HTMLImageElement).nextElementSibling;
+                      if (fb) (fb as HTMLElement).style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div
+                  style={{ display: member.photo_profil_url ? 'none' : 'flex' }}
+                  className="w-full h-full items-center justify-center bg-primary/10 text-primary font-bold text-[10px]"
+                >
+                  {member.prenom?.[0] || 'M'}
+                </div>
               </div>
 
               <span className="font-display font-bold text-xs text-text-main truncate max-w-[140px]">

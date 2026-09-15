@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tour } from '../../types';
-import { User, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
+import { formatMediaUrl } from '../../services/apiClient';
 
 interface RotationWheelProps {
   tours: Tour[];
@@ -125,16 +126,25 @@ export const RotationWheel: React.FC<RotationWheelProps> = ({ tours, cagnotteMon
 
         {/* Carte centrale affichant les détails du tour sélectionné */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center">
-          <div className="w-12 h-12 rounded-full border-2 border-accent p-0.5 mb-1 shadow-sm overflow-hidden bg-surface-2 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full border-2 border-accent p-0.5 mb-1 shadow-sm overflow-hidden bg-surface-2 flex items-center justify-center flex-shrink-0">
             {displayedTour.membre_groupe?.utilisateur.photo_profil_url ? (
               <img
-                src={displayedTour.membre_groupe.utilisateur.photo_profil_url}
+                src={formatMediaUrl(displayedTour.membre_groupe.utilisateur.photo_profil_url)}
                 alt="Bénéficiaire"
                 className="w-full h-full object-cover rounded-full"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fb = (e.target as HTMLImageElement).nextElementSibling;
+                  if (fb) (fb as HTMLElement).style.display = 'flex';
+                }}
               />
-            ) : (
-              <User className="w-6 h-6 text-text-dim" />
-            )}
+            ) : null}
+            <div
+              style={{ display: displayedTour.membre_groupe?.utilisateur.photo_profil_url ? 'none' : 'flex' }}
+              className="w-full h-full items-center justify-center bg-primary/10 text-primary font-bold text-xs"
+            >
+              {displayedTour.membre_groupe?.utilisateur.prenom?.[0] || 'T'}
+            </div>
           </div>
           <p className="font-display font-bold text-xs text-text-main truncate max-w-[120px]">
             {displayedTour.membre_groupe?.utilisateur.prenom} {displayedTour.membre_groupe?.utilisateur.nom}

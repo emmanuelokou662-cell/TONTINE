@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Phone, MapPin, Mail, Camera, Check } from 'lucide-react';
-import { apiFetch } from '../services/apiClient';
+import { Phone, MapPin, Mail, Camera, Check } from 'lucide-react';
+import { apiFetch, formatMediaUrl } from '../services/apiClient';
 
 interface ProfilePageProps {
   onOpenSettings: () => void;
@@ -19,7 +19,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onOpenSettings }) => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!user) return null;
 
@@ -34,13 +35,18 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onOpenSettings }) => {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    const formData = new FormData();
-    formData.append('nom', nom.trim());
-    formData.append('prenom', prenom.trim());
-    formData.append('ville', ville.trim());
-    if (photoFile) formData.append('photo', photoFile);
+    setError(null);
+    setSuccess(false);
 
     try {
+      const formData = new FormData();
+      formData.append('nom', nom.trim());
+      formData.append('prenom', prenom.trim());
+      formData.append('ville', ville.trim());
+      if (photoFile) {
+        formData.append('photo_profil', photoFile);
+      }
+
       const res = await apiFetch('/auth/profile', {
         method: 'PUT',
         body: formData
@@ -48,18 +54,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onOpenSettings }) => {
 
       setIsSaving(false);
       if (res.success) {
+        setSuccess(true);
         setIsEditing(false);
-        setSuccessMessage('Profil mis à jour avec succès !');
         await refreshUser();
-        setTimeout(() => setSuccessMessage(null), 3000);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(res.error?.message || 'Erreur lors de la mise à jour.');
       }
-    } catch (e) {
+    } catch (e: any) {
       setIsSaving(false);
+      setError('Erreur de connexion.');
     }
   };
 
+  const avatarUrl = photoPreview || formatMediaUrl(user.photo_profil_url);
+
   return (
-    <div className="space-y-4 pb-24 select-none">
+    <div className="space-y-4 pb-24 select-none max-w-md mx-auto">
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
@@ -74,9 +85,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onOpenSettings }) => {
         </button>
       </div>
 
-      {successMessage && (
-        <div className="p-3 rounded-2xl bg-success/15 border border-success/30 text-success text-xs font-semibold text-center animate-in fade-in">
-          {successMessage}
+      {/* Messages de succès ou d'erreur */}
+      {success && (
+        <div className="p-3 rounded-2xl bg-success/10 border border-success/20 text-success text-xs font-semibold text-center">
+          Profil mis à jour avec succès !
+        </div>
+      )}
+      {error && (
+        <div className="p-3 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-xs font-semibold text-center">
+          {error}
         </div>
       )}
 
@@ -85,15 +102,24 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ onOpenSettings }) => {
         {/* Photo de profil obligatoire (RF-01, RF-22) */}
         <div className="relative w-24 h-24 mx-auto mb-3">
           <div className="w-full h-full rounded-full border-2 border-accent overflow-hidden bg-surface-2 flex items-center justify-center shadow-md">
-            {photoPreview || user.photo_profil_url ? (
+            {avatarUrl ? (
               <img
-                src={photoPreview || user.photo_profil_url}
+                src={avatarUrl}
                 alt={user.prenom}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fb = (e.target as HTMLImageElement).nextElementSibling;
+                  if (fb) (fb as HTMLElement).style.display = 'flex';
+                }}
               />
-            ) : (
-              <User className="w-10 h-10 text-text-dim" />
-            )}
+            ) : null}
+            <div
+              style={{ display: avatarUrl ? 'none' : 'flex' }}
+              className="w-full h-full items-center justify-center bg-primary/10 text-primary font-display font-extrabold text-2xl"
+            >
+              {user.prenom?.[0] || 'U'}
+            </div>
           </div>
           {isEditing && (
             <label className="absolute bottom-0 right-0 p-2 rounded-full bg-accent text-white cursor-pointer shadow-lg hover:scale-105 transition-transform">

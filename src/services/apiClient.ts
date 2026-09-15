@@ -55,6 +55,30 @@ export const formatApiUrl = (endpoint: string): string => {
 };
 
 /**
+ * Résout une URL de média statique (photo de profil, capture de reçu, avatar)
+ * Convertit les chemins relatifs /uploads/... en URL absolue vers le backend en production
+ */
+export const formatMediaUrl = (url?: string | null): string => {
+  if (!url) return '';
+  const trimmed = url.trim();
+  if (!trimmed) return '';
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://')
+  ) {
+    return trimmed;
+  }
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const baseUrl = getApiBaseUrl();
+  if (baseUrl) {
+    return `${baseUrl}${cleanPath}`;
+  }
+  return cleanPath;
+};
+
+/**
  * Client HTTP Fetch sécurisé avec rafraîchissement silencieux de jeton JWT
  */
 export const apiFetch = async <T = any>(
