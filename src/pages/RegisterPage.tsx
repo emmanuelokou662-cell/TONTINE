@@ -241,7 +241,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onBack, onSuccess })
                     required
                     value={nom}
                     onChange={(e) => setNom(e.target.value)}
-                    placeholder="Kouassi"
+                    placeholder="OKOU"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-sm text-text-main focus:border-accent focus:outline-none"
                   />
                 </div>
@@ -252,7 +252,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onBack, onSuccess })
                     required
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
-                    placeholder="Jean"
+                    placeholder="EMMANUEL"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-sm text-text-main focus:border-accent focus:outline-none"
                   />
                 </div>
@@ -277,7 +277,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onBack, onSuccess })
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="jean.kouassi@exemple.ci"
+                  placeholder="emmanuel.okou@exemple.ci"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-surface-2 border border-custom text-sm text-text-main focus:border-accent focus:outline-none"
                 />
               </div>
